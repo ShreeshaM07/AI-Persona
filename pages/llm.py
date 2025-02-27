@@ -1,9 +1,13 @@
 import asyncio
 from groq import AsyncGroq
+import os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 async def get_ai_response(persona_background, chat_history, user_input):
     client = AsyncGroq(
-        api_key='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',
+        api_key=os.getenv("GROQ_API_KEY"),
     )
 
     # Construct a detailed persona description

@@ -1,11 +1,15 @@
 import streamlit as st
 import asyncio
 from pages.llm import get_ai_response
+import os
 from supabase import create_client, Client
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 # Supabase credentials
-SUPABASE_URL = "https://mpfpnpulbnxajowozgoc.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZnBucHVsYm54YWpvd296Z29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNTQ0MTcsImV4cCI6MjA1NTYzMDQxN30.Cp-9Ct-k_H-IXw5YWB_sq0l5eqFAxsxgYsw-nYYXtGU"
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
 
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
