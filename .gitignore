@@ -1,3 +1,4 @@
 groq
 supabase-ai-persona-pass
 .env
+pages/__pycache__
