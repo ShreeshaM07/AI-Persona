@@ -77,6 +77,43 @@ async def eval_candidate_skills(persona_details, chat_history):
     evaluation_result = response.choices[0].message.content
     print("\nCandidate Skills Evaluation:\n", evaluation_result)
 
+async def eval_conversation_success(persona_details, chat_history):
+    """
+    Evaluates the conversation based on:
+    - Context and Scenario-based conversation
+    - 75% accuracy on AI conversation
+    - 80% accuracy on user evaluation
+    
+    Returns structured feedback and success scores.
+    """
+    client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
+
+    success_criteria_prompt = (
+        "Evaluate the AI conversation and user responses based on the following success criteria:\n\n"
+        "1. **Context and Scenario-based conversation** - Did the AI follow the intended scenario?\n"
+        "2. **Conversation Accuracy (Target: 75%)** - Did the AI provide accurate responses?\n"
+        "3. **User Evaluation Accuracy (Target: 80%)** - Did the AI correctly assess the user's skills?\n\n"
+        "Provide a breakdown of these aspects, along with a **final success score (0-100)**."
+    )
+
+    messages = [{"role": "system", "content": success_criteria_prompt}]
+
+    for entry in chat_history:
+        role = entry["role"]
+        content = entry["content"]
+        messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": "Analyze the conversation and provide a structured evaluation based on the success criteria."})
+
+    response = await client.chat.completions.create(
+        messages=messages,
+        model="llama-3.3-70b-versatile",
+        temperature=0.5,
+        max_completion_tokens=512
+    )
+
+    evaluation_result = response.choices[0].message.content
+    print("\n🔎 Conversation Success Evaluation:\n", evaluation_result)
 
 def get_personas():
     """Fetch all personas from the database."""
@@ -129,7 +166,11 @@ if not ai_responses:
     print("No AI responses found for this persona.")
     exit()
 
-# Evaluate persona alignment
-asyncio.run(eval_persona_prompt_alignment(persona_details, ai_responses))
-# Evaluate candidate skills
-asyncio.run(eval_candidate_skills(persona_details, chat_history))
+async def main():
+    await asyncio.gather(
+        eval_persona_prompt_alignment(persona_details, ai_responses),
+        eval_candidate_skills(persona_details, chat_history),
+        eval_conversation_success(persona_details, chat_history)
+    )
+
+asyncio.run(main())
