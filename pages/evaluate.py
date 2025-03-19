@@ -77,23 +77,26 @@ async def eval_candidate_skills(persona_details, chat_history):
     evaluation_result = response.choices[0].message.content
     print("\nCandidate Skills Evaluation:\n", evaluation_result)
 
-async def eval_conversation_success(persona_details, chat_history):
+async def eval_conversation_success(persona_details, chat_history, candidate_evaluation_result):
     """
     Evaluates the conversation based on:
     - Context and Scenario-based conversation
     - 75% accuracy on AI conversation
     - 80% accuracy on user evaluation
-    
+
     Returns structured feedback and success scores.
     """
     client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
 
     success_criteria_prompt = (
         "Evaluate the AI conversation and user responses based on the following success criteria:\n\n"
-        "1. **Context and Scenario-based conversation** - Did the AI follow the intended scenario?\n"
-        "2. **Conversation Accuracy (Target: 75%)** - Did the AI provide accurate responses?\n"
-        "3. **User Evaluation Accuracy (Target: 80%)** - Did the AI correctly assess the user's skills?\n\n"
-        "Provide a breakdown of these aspects, along with a **final success score (0-100)**."
+        "1. **Context and Scenario-based conversation** - Did the AI follow the intended scenario and maintain coherence?\n"
+        "2. **Conversation Accuracy (Target: 75%)** - Did the AI provide factually correct and contextually relevant responses?\n"
+        "3. **User Evaluation Accuracy (Target: 80%)** - Based on the AI's evaluation of the user, how accurate and insightful was the assessment?\n\n"
+        "You are provided with:\n"
+        "- The full conversation history between the AI and the user.\n"
+        "- The AI's evaluation of the user.\n\n"
+        "Provide a detailed breakdown of each success criterion with individual scores (0-100) and a final aggregated success score."
     )
 
     messages = [{"role": "system", "content": success_criteria_prompt}]
@@ -103,7 +106,9 @@ async def eval_conversation_success(persona_details, chat_history):
         content = entry["content"]
         messages.append({"role": role, "content": content})
 
-    messages.append({"role": "user", "content": "Analyze the conversation and provide a structured evaluation based on the success criteria."})
+    messages.append({"role": "assistant", "content": f"AI's User Evaluation: {candidate_evaluation_result}"})
+
+    messages.append({"role": "user", "content": "Analyze the provided data and give a structured evaluation based on the success criteria."})
 
     response = await client.chat.completions.create(
         messages=messages,
@@ -113,7 +118,9 @@ async def eval_conversation_success(persona_details, chat_history):
     )
 
     evaluation_result = response.choices[0].message.content
-    print("\n🔎 Conversation Success Evaluation:\n", evaluation_result)
+    print("\n🔎 **Conversation Success Evaluation:**\n", evaluation_result)
+
+    return evaluation_result
 
 def get_personas():
     """Fetch all personas from the database."""
@@ -167,10 +174,13 @@ if not ai_responses:
     exit()
 
 async def main():
-    await asyncio.gather(
-        eval_persona_prompt_alignment(persona_details, ai_responses),
-        eval_candidate_skills(persona_details, chat_history),
-        eval_conversation_success(persona_details, chat_history)
-    )
+    persona_eval_task = eval_persona_prompt_alignment(persona_details, ai_responses)
+    candidate_skills_task = eval_candidate_skills(persona_details, chat_history)
+
+    await persona_eval_task
+    candidate_skills = await candidate_skills_task 
+
+    await eval_conversation_success(persona_details, chat_history, candidate_skills)
+
 
 asyncio.run(main())
