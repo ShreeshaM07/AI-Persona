@@ -22,14 +22,17 @@ st.title("Create or Select Your AI Persona")
 
 # Retrieve current user's ID
 user_id = st.session_state["user"].get("id") if isinstance(st.session_state["user"], dict) else st.session_state["user"].id
-st.write(st.session_state["user"])
+# st.write(st.session_state["user"])
 
 # Fetch existing personas
 personas = supabase.table("personas").select("*").eq("user_id", user_id).execute()
-st.write(personas)
+# st.write(personas)
 
 persona_data = {p["name"]: p for p in personas.data} if personas.data else {}
 persona_list = ["Create New"] + list(persona_data.keys())
+
+if st.button("Evaluate Candidate"):
+    st.switch_page("pages/evaluate.py")
 
 # Option to select an existing persona
 selected_persona = st.selectbox("Choose an existing persona:", persona_list)

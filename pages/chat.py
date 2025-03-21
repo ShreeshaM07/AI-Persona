@@ -26,20 +26,20 @@ user_id = st.session_state["user"].get("id") if isinstance(st.session_state["use
 
 # Retrieve persona details from session state
 select_persona_background = st.session_state["selected_persona"]
-st.write(select_persona_background)
+# st.write(select_persona_background)
 
 # Fetch the selected persona's ID from the database
 persona_name = st.session_state["selected_persona"]["name"]
 persona_query = supabase.table("personas").select("id").eq("user_id", user_id).eq("name", persona_name).execute()
 
-st.write(persona_query)
+# st.write(persona_query)
 
 if not persona_query.data:
     st.error("Persona not found!")
     st.stop()
 
 persona_id = persona_query.data[0]["id"]  # Get the persona     ID
-st.write(persona_id)
+# st.write(persona_id)
 # Fetch previous chat history for this persona
 chat_query = supabase.table("chat_history").select("role, content").eq("persona_id", persona_id).order("timestamp").execute()
 st.session_state.chat_history = chat_query.data if chat_query.data else []
