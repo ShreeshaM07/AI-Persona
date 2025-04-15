@@ -45,7 +45,8 @@ async def get_ai_response(persona_background, chat_history, user_input):
     # Call the Groq API
     response = await client.chat.completions.create(
         messages=messages,
-        model="mixtral-8x7b-32768",
+        model="llama-3.1-8b-instant",
+        # model="mixtral-8x7b-32768",
         temperature=0.5,
         max_completion_tokens=1024,
         top_p=1,
